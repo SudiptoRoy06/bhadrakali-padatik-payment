@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#123b2b">
+  <link rel="icon" type="image/jpeg" href="favicon.jpg">
   <title>Bhadrakali Padatik RCC 2026 - Pakhi Pahar</title>
   <style>
     :root { --green:#17620f; --green2:#237b18; --cream:#fffef0; --yellow:#dfd600; --ink:#173015; }
@@ -16,6 +17,10 @@
     .subtitle { margin:8px 0 0; color:#fff72b; font-weight:750; }
     .location { margin:5px 0 0; color:#fff; font-size:15px; font-weight:650; }
     main { padding:26px; }
+    .payment-divider { display:flex; align-items:center; gap:14px; margin:24px 0; color:#59645e; font-size:13px; font-weight:700; }
+    .payment-divider::before, .payment-divider::after { content:""; flex:1; height:1px; background:#aabda7; }
+    .full-payment h2 { margin:0 0 8px; font-size:18px; }
+    .full-payment p { margin:0 0 14px; font-size:13px; line-height:1.5; }
     label { display:block; margin-bottom:8px; font-size:14px; font-weight:700; }
     .amount { display:flex; align-items:center; border:1.5px solid #aabda7; border-radius:13px; background:#f2f7eb; }
     .amount span { padding-left:16px; font-size:22px; font-weight:750; }
@@ -28,6 +33,33 @@
     #copyBtn { width:auto; margin:0; padding:7px 10px; border:1px solid #b8c7be; color:var(--green); background:#eef5f0; box-shadow:none; font-size:12px; }
     .note { margin:16px 2px 0; color:#59645e; font-size:12px; line-height:1.5; text-align:center; }
     .error { min-height:19px; margin:7px 2px -3px; color:#b3261e; font-size:13px; }
+    html { -webkit-text-size-adjust:100%; }
+    body { min-height:100svh; padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); }
+    .card { min-width:0; }
+    h1 { overflow-wrap:anywhere; }
+    button { min-height:48px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; touch-action:manipulation; }
+    button:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
+    .fixed-amount { min-width:0; }
+    #copyBtn { min-width:48px; min-height:44px; flex-shrink:0; }
+    @media (max-width:480px) {
+      .card { border-radius:20px; }
+      .hero { padding:22px 18px; }
+      .logo { width:108px; height:108px; margin-bottom:14px; }
+      h1 { font-size:clamp(21px,5.5vw,25px); }
+      main { padding:20px 18px; }
+      button { padding:14px 12px; }
+      .payment-divider { margin:22px 0; }
+    }
+    @media (max-width:360px) {
+      .hero { padding:20px 14px; }
+      main { padding:18px 14px; }
+      .details { padding:12px; }
+      .upi-row { flex-wrap:wrap; }
+      #upiText { flex-basis:150px; }
+    }
+    @media (min-width:481px) {
+      body { padding:24px; }
+    }
   </style>
 </head>
 <body>
@@ -39,13 +71,22 @@
       <p class="location">Pakhi Pahar, Purulia</p>
     </header>
     <main>
-      <label>Payment amount</label>
+      <label>Advance Payment amount</label>
       <div class="amount" aria-label="Fixed payment amount of 2000 rupees"><span>₹</span><div class="fixed-amount">2,000.00</div></div>
       <div id="error" class="error" role="alert"></div>
-      <button id="payBtn" type="button">Pay securely with UPI</button>
+      <button id="payBtn" type="button">Pay your advance amount securely with UPI</button>
       <div class="details">
         <strong>Paying for</strong><br>Advance Payment for Rock Climbing &amp; Adventure Course 2026
-        <div style="margin-top:10px"><strong>UPI ID</strong></div>
+      </div>
+      <div class="payment-divider">OR</div>
+      <section class="full-payment" aria-labelledby="fullPaymentTitle">
+        <h2 id="fullPaymentTitle">Full payment</h2>
+        <p>Pay the full course fee for Rock Climbing &amp; Adventure Course 2026.</p>
+        <div class="amount" aria-label="Full payment amount of 4900 rupees"><span>₹</span><div class="fixed-amount">4,900.00</div></div>
+        <button id="fullPayBtn" type="button">Pay full amount of ₹4,900 with UPI</button>
+      </section>
+      <div class="details">
+        <strong>UPI ID</strong>
         <div class="upi-row"><span id="upiText">9432219858@ucobank</span><button id="copyBtn" type="button">Copy</button></div>
       </div>
       <p class="note">Your UPI app will show the payee name before payment. Verify it carefully. Keep the transaction ID or screenshot after paying.</p>
@@ -55,18 +96,22 @@
     // IMPORTANT: Replace this placeholder with the complete UPI ID before hosting.
     const UPI_ID = '9432219858@ucobank';
     const PAYEE_NAME = 'Bhadrakali Padatik RCC 2026';
-    const PAYMENT_NOTE = 'Advance Payment - Rock Climbing & Adventure Course 2026';
-    const PAYMENT_AMOUNT = '2000.00';
 
     const error = document.getElementById('error');
-    document.getElementById('payBtn').addEventListener('click', () => {
+    function payWithUpi(amount, note) {
       if (UPI_ID.startsWith('REPLACE_')) {
         error.textContent = 'The organiser must add the complete UPI ID before publishing this page.';
         return;
       }
       error.textContent = '';
-      const params = new URLSearchParams({ pa: UPI_ID, pn: PAYEE_NAME, am: PAYMENT_AMOUNT, cu: 'INR', tn: PAYMENT_NOTE });
+      const params = new URLSearchParams({ pa: UPI_ID, pn: PAYEE_NAME, am: amount, cu: 'INR', tn: note });
       window.location.href = `upi://pay?${params.toString()}`;
+    }
+    document.getElementById('payBtn').addEventListener('click', () => {
+      payWithUpi('2000.00', 'Advance Payment - Rock Climbing & Adventure Course 2026');
+    });
+    document.getElementById('fullPayBtn').addEventListener('click', () => {
+      payWithUpi('4900.00', 'Full Payment - Rock Climbing & Adventure Course 2026');
     });
     document.getElementById('copyBtn').addEventListener('click', async (event) => {
       if (UPI_ID.startsWith('REPLACE_')) {
